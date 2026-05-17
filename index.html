@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="data:,">
+    <meta charset="UTF-8">
+    <title>Dark Knight Developer Score</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    
+
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #0f172a;
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            width: 60%;
+            margin: auto;
+            margin-top: 40px;
+            background: linear-gradient(145deg, #1e293b, #020617);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0px 0px 40px rgba(0,0,0,0.8);
+        }
+
+        #hero {
+            margin-top:50px;
+            padding:60px 30px;
+            min-height:350px;
+
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+
+
+            background:#020617;
+            border-radius:20px;
+            box-shadow:0 0 40px rgba(0,255,200,0.1);
+
+        }
+
+        input {
+            padding: 12px;
+            width: 60%;
+            border-radius: 8px;
+            border: none;
+            margin-right: 10px;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        canvas#gauge {
+            filter: drop-shadow(0 0 15px #00e6ff);
+        }
+
+        #result {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 50px;
+        }
+
+        .score {
+            color: #22c55e;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        hr {
+            margin: 15px 0;
+            border-color: #334155;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 22px;
+            border-radius: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.6);
+            text-align: left;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            transition: 0.3s;
+        }
+
+</style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div style="margin-bottom:20px;">
+            <h1 style="font-size:28px;">🦇 Dark Knight Dashboard</h1>
+            <p style="color:gray;">
+            Privacy-preserving AI system that analyzes developer behavior without exposing raw data
+            </p>
+        </div>
+
+        <div style="margin-bottom:25px;">
+            <input type="text" id="username" placeholder="Enter GitHub Username"
+                style="width:65%; padding:14px; border-radius:10px; border:none;">
+
+            <button onclick="getScore()"
+                style="padding:14px 22px; border-radius:10px; background:#3b82f6; color:white; font-weight:bold;">
+                Analyze
+            </button>
+        </div>
+
+        <div id="hero">
+        <p style="color:#94a3b8; font-size:14px;">
+        GitHub profiles show activity — this system converts behavior into a hiring signal.
+        </p>
+
+
+            <h1 style="font-size:22px; color:#94a3b8;">Dark Knight Score</h1>
+
+            <div id="bigScore" style="
+                font-size:110px;
+                font-weight:900;
+                margin-top:10px;
+
+                background: linear-gradient(90deg,#22c55e,#4ade80); 
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+
+                text-shadow:0 0 60px rgba(34,197,94,0.9);
+
+                letter-spacing:2px;
+            ">
+                --
+            </div>
+
+            <div id="badgeContainer" style="margin-top:10px;"></div>
+
+            <div id="heroInsight" style="
+                margin-top:8px;
+                color:#22c55e;
+                font-size:14px;
+                font-weight:500;
+            ">
+                This system converts developer activity into a hiring signal .
+            </div>
+
+            <div style="
+                margin-top:8px;
+                color:#64748b;
+                font-size:13px;
+            ">
+                This score helps identify consistent and high-impact developers
+                <p style="color:#64748b; font-size:12px;">
+                No personal data is stored. All analysis happens in real-time.
+                </p>
+            </div>
+
+            <canvas id="gauge" style="width:260px; height:260px; margin:20px auto;"></canvas>
+
+        </div>
+
+        
+
+        
+
+        
+        <div id="result"></div>
+
+        
+
+        <canvas id="chart" style="
+        margin-top:20px;
+        background:#020617;
+        padding:15px;
+        border-radius:12px;
+        "></canvas>
+
+        <h3>Commit Distribution (Total vs Night vs Complex)</h3>
+        <p style="color:#64748b; font-size:12px;">
+        Benchmark is based on heuristic thresholds, not global GitHub comparison.
+        </p>
+
+    </div>
+
+    <script>
+
+        let barChart = null;
+        let gaugeChart = null;
+
+        async function getScore() {
+
+            
+            
+            
+            let button = document.querySelector("button");
+            button.innerText = "Analyzing...";
+            button.disabled = true;
+            button.style.background = "#64748b";
+            
+            let username = document.getElementById("username").value;
+
+            username = username.trim();
+            console.log("USERNAME:", username);
+
+            if (!username) {
+                alert("Enter valid username");
+                return;
+            }
+
+            
+
+            document.getElementById("result").innerHTML = "🔍 Analyzing developer...";
+
+            try {
+                let response = await fetch("https://dark-knight-backend-pgzz.onrender.com/score?username=" + encodeURIComponent(username));
+
+                if (response.status === 422) {
+                    throw new Error("Username missing or invalid");
+                }
+
+                if (!response.ok) {
+                    throw new Error("GitHub/API error");
+                }
+
+            let data = await response.json();
+            if (data.error) {
+            document.getElementById("result").innerHTML =
+                    "<div class='card'><h3>Error</h3><p>" + data.error + "</p></div>";
+                return;
+            }
+            let consistency_msg = "";
+
+            if (data.consistency_days > 30) {
+                consistency_msg = "Highly consistent developer";
+            } else if (data.consistency_days > 10) {
+                consistency_msg = "Moderately consistent";
+            } else {
+                consistency_msg = "Low consistency";
+            }
+            let badgeColor = "#64748b";
+
+            let scoreColor = "#22c55e";
+
+            if (data.dark_knight_score < 150) {
+                scoreColor = "#ef4444"; // red
+            } else if (data.dark_knight_score < 300) {
+                scoreColor = "#facc15"; // yellow
+            }
+
+            if (data.badge === "Dark Knight Master") {
+                badgeColor = "#facc15";
+            }
+            else if (data.badge === "Midnight Warrior") {
+                badgeColor = "#3b82f6";
+            }
+            else {
+                badgeColor = "#475569";
+            }
+
+            
+            let ctx = document.getElementById('chart').getContext('2d');
+
+            if (barChart) {
+                barChart.destroy();
+}
+
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total', 'Night', 'Complex'],
+                    datasets: [{
+                        label: 'Commit Analysis',
+                        data: [
+                            data.total_commits,
+                            data.night_commits,
+                            data.complex_commits
+                        ],
+                        backgroundColor: [
+                            '#3b82f6',   // blue
+                            '#22c55e',   // green
+                            '#facc15'    // yellow
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: 'white'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: 'white'
+                            }
+                        }
+                    }
+                }
+            });
+
+            let gaugeCtx = document.getElementById('gauge').getContext('2d');
+
+            if (gaugeChart) {
+                gaugeChart.destroy();
+            }
+
+            gaugeChart = new Chart(gaugeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Score', 'Remaining'],
+                    datasets: [{
+                        data: [
+                            data.dark_knight_score,
+                                500 - data.dark_knight_score
+                            ],
+                            backgroundColor: [
+                                scoreColor,   // score
+                                '#1e293b'    // remaining
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '70%',
+                        rotation: -90,
+                        circumference: 180,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+            });
+
+            document.getElementById("bigScore").innerHTML =
+                data.dark_knight_score +
+                "<br><span style='font-size:14px;color:#64748b;'>" + data.user_id + "</span>";
+
+            let benchmark = data.benchmark_label + " (" + data.percentile + "%)";
+
+            
+
+            document.getElementById("heroInsight").innerHTML =
+                data.level + " • Based on commit consistency, complexity, and PR impact" +
+                "<br><span style='color:#38bdf8; font-size:13px;'>" + benchmark + "</span>" +
+                "<br><span style='color:#22c55e; font-size:13px;'>" + data.decision + "</span>";
+
+            document.getElementById("result").innerHTML =
+
+                "<div class='card'>" +
+                "<h3>📊 Activity</h3>" +
+                "<p>Total Commits: " + data.total_commits + "</p>" +
+                "<p>Night Commits: " + data.night_commits + "</p>" +
+                "<p>Active Days: " + data.consistency_days + "</p>" +
+                "</div>" +
+
+                "<div class='card'>" +
+                "<h3>⚡ Performance</h3>" +
+                "<p>Complex Commits: " + data.complex_commits + "</p>" +
+                "<p>Pull Requests: " + data.pull_requests + "</p>" +
+                "<p>Merged PRs: " + data.merged_pull_requests + "</p>" +
+                "<p>Avg Commit Size: " + data.avg_commit_size + "</p>" +
+                "</div>" +
+
+                "<div class='card'>" +
+                "<h3>🧠 Insights</h3>" +
+                "<p>" + data.final_summary + "</p>" +
+                "<p>Burnout Risk: " + data.burnout + "</p>" +
+                "</div>" +
+
+                "<div class='card'>" +
+                "<h3>📌 Score Logic</h3>" +
+                "<p>Score is calculated using commit activity, code complexity, and PR impact.</p>" +
+                "</div>" +
+
+                "<div class='card'>" +
+                "<h3>🔐 Privacy</h3>" +
+                "<p>" + data.privacy_note + "</p>" +
+                "<p style='font-size:11px;color:#38bdf8;'>Proof: " + data.proof + "</p>" +
+                "</div>" +
+
+                "<div class='card'>" +
+                "<h3>🤖 AI Analysis</h3>" +
+                "<p>" + data.ai_note + "</p>" +
+                "</div>" +
+
+                "<div class='card'>" +
+                "<h3>🏆 Leaderboard</h3>" +
+                (data.leaderboard || []).map((u, i) =>
+                    "<p>" + (i+1) + ". " + u.user_id + " — " + u.score + "</p>"
+                ).join("") +
+                "</div>";
+
+                button.innerText = "Analyze";
+                button.disabled = false;
+                button.style.background = "#3b82f6";
+                
+            } catch (error) {
+                console.error(error);
+            document.getElementById("result").innerHTML = 
+                    "<div class='card'><h3>Error</h3><p>Invalid username or API issue</p></div>";
+
+                button.innerText = "Analyze";
+                button.disabled = false;
+                button.style.background = "#3b82f6";
+            }
+        }
+
+            
+    </script>
+
+</body>
+</html>
