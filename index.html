@@ -227,7 +227,7 @@
             document.getElementById("result").innerHTML = "🔍 Analyzing developer...";
 
             try {
-                let response = await fetch("https://dark-knight-backend-pgzz.onrender.com" + username);
+                let response = await fetch("https://dark-knight-backend-pgzz.onrender.com/score?username="" + username);
 
                 if (!response.ok) {
                     throw new Error("User not found");
