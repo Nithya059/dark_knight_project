@@ -1,4 +1,4 @@
-🦇 Dark Knight Developer Score
+# 🦇 Dark Knight Developer Score
 
 A privacy-presing AI system that analyzes GitHub activity and converts developer behavior into a hiring signal — without exposing raw data.
 
